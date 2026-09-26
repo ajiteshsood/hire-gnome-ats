@@ -25,19 +25,38 @@ function buildDatabaseUrl() {
 
 process.env.DATABASE_URL = buildDatabaseUrl();
 
-const next = spawn(
-	process.platform === 'win32' ? 'npx.cmd' : 'npx',
-	['next', 'start'],
-	{
-		stdio: 'inherit',
-		env: process.env
-	}
-);
+function run(command, args) {
+	return new Promise((resolve, reject) => {
+		const child = spawn(command, args, {
+			stdio: 'inherit',
+			env: process.env
+		});
 
-next.on('exit', (code, signal) => {
-	if (signal) {
-		process.kill(process.pid, signal);
-	} else {
-		process.exit(code ?? 1);
-	}
+		child.on('error', reject);
+
+		child.on('exit', (code, signal) => {
+			if (signal) {
+				reject(new Error(`${command} terminated by ${signal}`));
+			} else if (code !== 0) {
+				reject(new Error(`${command} exited with code ${code}`));
+			} else {
+				resolve();
+			}
+		});
+	});
+}
+
+async function main() {
+	const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
+	// Apply all production Prisma migrations before starting Hire Gnome.
+	await run(npx, ['prisma', 'migrate', 'deploy']);
+
+	// Start the Next.js production server.
+	await run(npx, ['next', 'start']);
+}
+
+main().catch((error) => {
+	console.error('[startup] Failed:', error);
+	process.exit(1);
 });
