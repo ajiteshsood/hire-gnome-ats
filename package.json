@@ -14,7 +14,7 @@
 		"build": "NODE_ENV=production next build --webpack",
 		"build:deploy": "NODE_ENV=production npx prisma migrate deploy && npm run build",
 		"prestart": "prisma generate",
-		"start": "NODE_ENV=production next start",
+		"start": "NODE_ENV=production node scripts/start.js",
 		"ci:preflight": "node scripts/preflight.cjs",
 		"ci:build": "npm run build",
 		"ci:smoke": "node scripts/test-permissions-api.cjs",
