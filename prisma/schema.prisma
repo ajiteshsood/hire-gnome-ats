@@ -293,6 +293,7 @@ model Candidate {
 	ownerUser       User?               @relation("CandidateOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 	division        Division?           @relation(fields: [divisionId], references: [id], onDelete: SetNull)
 	submissions     Submission[]
+jobCandidates   JobCandidate[]
 	notes           CandidateNote[]
 	activities      CandidateActivity[]
 	candidateEducations CandidateEducation[]
@@ -657,6 +658,7 @@ model JobOrder {
 	contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
 	submissions Submission[]
+jobCandidates JobCandidate[]
 	interviews  Interview[]
 	offers      Offer[]
 	matchExplanations MatchExplanation[]
@@ -673,6 +675,27 @@ model JobOrder {
 	@@index([ownerId])
 }
 
+model JobCandidate {
+  id          Int      @id @default(autoincrement())
+  recordId    String   @unique
+
+  jobOrderId  Int
+  candidateId Int
+
+  status      String   @default("sourced")
+  source      String?
+  notes       String?  @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobOrder    JobOrder  @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([jobOrderId, candidateId])
+  @@index([jobOrderId, status])
+  @@index([candidateId])
+}
 model Submission {
 	id         Int      @id @default(autoincrement())
 	recordId   String   @unique
